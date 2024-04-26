@@ -6,6 +6,10 @@ class Category extends Models
 {
     public function display()
     {
-       return $this->data['name'];
+       
+         $output = $this->data['name'] . "\n";
+         $output .= $this->data['__typename'] . "\n";
+
+       return $output;
     }
 }

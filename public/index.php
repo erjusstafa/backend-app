@@ -1,15 +1,20 @@
 <?php
 // Require the necessary files
+
+use App\Controller\GraphQL;
+
 require_once  '../app/services/database.php';
 require_once  '../app/models/category.php';
 require_once  '../app/models/product.php';
 require_once  '../app/models/attribute.php';
+require_once '../vendor/autoload.php';
 
-$database = new Database();
+
 // Now you can get the database connection and use it for executing queries
+$database = new Database();
 $conn = $database->connect();
 
-
+//get data from json file 
 $json_data = file_get_contents('data.json');
 $data = json_decode($json_data, true);
 
@@ -24,18 +29,26 @@ foreach ($data['data']['products'] as $productData) {
     $productModels[] = new Product($productData);
 }
 
-
-
-// Display categories
-echo "Categories:\n";
+// Display categories && products
+/* echo "Categories:\n";
 foreach ($categoryModels as $categoryModel) {
     echo  $categoryModel->display() . "\n";
 }  
-
-// Display products
-/* foreach ($productModels as $productModel) {
+echo "Products:\n";
+  foreach ($productModels as $productModel) {
     echo $productModel->display();
-} */
+} 
+ */
+
+
+
+/* $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) {
+    $r->post('/graphql', [app\controller\GraphQLTest::class, 'handle']);
+}); */
+
+$dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) {
+    $r->post('/graphql', [app\controller\GraphQL::class, 'handle']);
+});
 
 
 $routeInfo = $dispatcher->dispatch(
@@ -43,19 +56,22 @@ $routeInfo = $dispatcher->dispatch(
     $_SERVER['REQUEST_URI']
 );
 
-echo $routeInfo;
-
-/* switch ($routeInfo[0]) {
+switch ($routeInfo[0]) {
     case FastRoute\Dispatcher::NOT_FOUND:
-        // ... 404 Not Found
+        $result = GraphQL::handle($conn);
+        echo $result;
         break;
     case FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
         $allowedMethods = $routeInfo[1];
+        echo "test2";
+
         // ... 405 Method Not Allowed
         break;
     case FastRoute\Dispatcher::FOUND:
         $handler = $routeInfo[1];
         $vars = $routeInfo[2];
         echo $handler($vars);
+        echo "test3";
+
         break;
-} */
+}

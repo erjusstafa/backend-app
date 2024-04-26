@@ -1,0 +1,15 @@
+{
+    
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        },
+        "psr-0": {
+            "": "app/"
+        }
+    },
+    "require": {
+        "webonyx/graphql-php": "^15.11",
+        "nikic/fast-route": "*"
+    }
+}
