@@ -42,14 +42,9 @@ echo "Products:\n";
 
 
 
-/* $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) {
-    $r->post('/graphql', [app\controller\GraphQLTest::class, 'handle']);
-}); */
-
-$dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) {
-    $r->post('/graphql', [app\controller\GraphQL::class, 'handle']);
+ $dispatcher = FastRoute\simpleDispatcher(function(FastRoute\RouteCollector $r) {
+    $r->post('/graphql', [App\Controller\GraphQL::class, 'handle']);
 });
-
 
 $routeInfo = $dispatcher->dispatch(
     $_SERVER['REQUEST_METHOD'],

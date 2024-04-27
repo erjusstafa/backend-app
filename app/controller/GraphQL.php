@@ -2,14 +2,14 @@
 
 namespace App\Controller;
 
+require_once 'types.php';
+
 use GraphQL\GraphQL as GraphQLBase;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
 use PDO;
 use Throwable;
-
-require_once 'types.php';
 
 
 class GraphQL
@@ -20,26 +20,32 @@ class GraphQL
         try {
 
             $types = new Types();
-
             $queryType = new ObjectType([
                 'name' => 'Query',
                 'fields' => [
                     'categories' => [
-                        'type' => Type::listOf($types->Cat()),
+                        'type' => Type::listOf($types->CategoriesType()),
                         'resolve' => function ($root, $args, $context) use ($conn) {
 
-                            // Execute a query to fetch user names
+                            // Execute a query to fetch categories names
                             $query = "SELECT name FROM categories";
                             $stmt = $conn->prepare($query);
                             $stmt->execute();
-                            $users =  $stmt->fetchAll(PDO::FETCH_ASSOC);
-                            // Extract the user names from the fetched data
-                            /*       $userNames = array_map(function ($user) {
-                                return $user['name'];
-                            }, $users);
- */
+                            $categories =  $stmt->fetchAll(PDO::FETCH_ASSOC);
+                            return $categories;
+                        },
+                    ],
 
-                            return $users;
+                    'products' => [
+                        'type' => Type::listOf($types->ProductsType()),
+                        'resolve' => function ($root, $args, $context) use ($conn) {
+
+                            // Execute a query to fetch products names
+                            $query = "SELECT id FROM products";
+                            $stmt = $conn->prepare($query);
+                            $stmt->execute();
+                            $products =  $stmt->fetchAll(PDO::FETCH_ASSOC);
+                            return $products;
                         },
                     ],
                 ],
@@ -83,7 +89,7 @@ class GraphQL
             $schema = new Schema(['query' => $queryType]);
 
             // Execute a query
-            $query = '{ categories{name}}';
+            $query = '{ products {id} }';
             $result = GraphQLBase::executeQuery($schema, $query);
             $output = $result->toArray();
         } catch (Throwable $e) {
