@@ -11,7 +11,7 @@ class Types
 {
 
     // Define the CategoriesType 
-    static public function CategoriesType()
+    public  static function CategoriesType()
     {
 
         $categoryType = new ObjectType([
@@ -25,7 +25,7 @@ class Types
 
 
     // Define the AttributeType
-    static public function AttributeType()
+    public  static function AttributeType()
     {
         $attributeSetType = new ObjectType([
             'name' => 'AttributeSet',
@@ -46,10 +46,12 @@ class Types
         return $attributeSetType;
     }
 
-    static public function ProductsType()
+
+    // Define the Product type
+
+    public  static function ProductsType()
     {
         $attributeSetType = self::AttributeType();  // Retrieve the AttributeType
-        // Define the Product type
         $productType = new ObjectType([
             'name' => 'Product',
             'fields' => [
@@ -59,13 +61,13 @@ class Types
                 'gallery' => ['type' => Type::listOf(Type::string())],
                 'description' => ['type' => Type::string()],
                 'category' => ['type' => Type::string()],
-                /*   'attributes' => [
-                      Attributes are of type AttributeSet
+                /* 'attributes' => [
+                    // Attributes are of type AttributeSet
                     'type' => $attributeSetType(),
-                      Resolver function to fetch attributes for the product
+                    // Resolver function to fetch attributes for the product
                     'resolve' => function ($product) {
-                        Fetch and return attributes data for the product
-                        return $product['attributes'];   Placeholder for attributes data
+                        //Fetch and return attributes data for the product
+                        return $product['attributes'];   //Placeholder for attributes data
                     }
                 ], */
                 'prices' => Type::listOf(new ObjectType([

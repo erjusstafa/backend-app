@@ -89,7 +89,7 @@ class GraphQL
             $schema = new Schema(['query' => $queryType]);
 
             // Execute a query
-            $query = '{ products {id} }';
+            $query = '{ products {id,inStock}  }';
             $result = GraphQLBase::executeQuery($schema, $query);
             $output = $result->toArray();
         } catch (Throwable $e) {
