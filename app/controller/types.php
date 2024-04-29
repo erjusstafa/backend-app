@@ -34,7 +34,7 @@ class Types
                 'name' => ['type' => Type::string()],
                 'type' => ['type' => Type::string()],
                 'items' => ['type' => Type::listOf(new ObjectType([
-                    'name' => 'Attribute',
+                    'name' => 'items',
                     'fields' => [
                         'id' => ['type' => Type::string()],
                         'displayValue' => ['type' => Type::string()],
@@ -51,8 +51,7 @@ class Types
 
     public  static function ProductsType()
     {
-        $attributeSetType = self::AttributeType();  // Retrieve the AttributeType
-        $productType = new ObjectType([
+         $productType = new ObjectType([
             'name' => 'Product',
             'fields' => [
                 'id' => ['type' => Type::string()],
@@ -61,26 +60,25 @@ class Types
                 'gallery' => ['type' => Type::listOf(Type::string())],
                 'description' => ['type' => Type::string()],
                 'category' => ['type' => Type::string()],
-                /* 'attributes' => [
-                    // Attributes are of type AttributeSet
-                    'type' => $attributeSetType(),
+                'attributes' => [
+                    'type' => Type::listOf(self::AttributeType()),
                     // Resolver function to fetch attributes for the product
                     'resolve' => function ($product) {
                         //Fetch and return attributes data for the product
-                        return $product['attributes'];   //Placeholder for attributes data
+                        return $product['attributes'] ?? [];   //Placeholder for attributes data
                     }
-                ], */
+                ],
                 'prices' => Type::listOf(new ObjectType([
                     'name' => 'Price',
                     'fields' => [
                         'amount' => Type::float(),
-                        'currency' => Type::listOf(new ObjectType([
+                        'currency' => new ObjectType([
                             'name' => 'currency',
                             'fields' => [
-                                'amount' => Type::string(),
-                                'currency' => Type::string(),
+                                'label' => Type::string(),
+                                'symbol' => Type::string(),
                             ],
-                        ])),
+                        ]),
                     ],
                 ])),
                 'brand' => ['type' => Type::string()]
