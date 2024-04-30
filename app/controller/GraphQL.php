@@ -20,12 +20,11 @@ class GraphQL
     {
         try {
 
-            $types = new Types();
             $queryType = new ObjectType([
                 'name' => 'Query',
                 'fields' => [
                     'categories' => [
-                        'type' => Type::listOf($types->CategoriesType()),
+                        'type' => Type::listOf(Types::CategoriesType()),
                         'resolve' => function ($root, $args, $context) use ($conn) {
 
                             // Execute a query to fetch categories names
@@ -38,56 +37,67 @@ class GraphQL
                     ],
 
                     'products' => [
-                        'type' => Type::listOf($types->ProductsType()),
-                        'resolve' => function ($root, $args, $context) use ($conn) {
-
-                            // Execute a query to fetch products names
+                        'type' => Type::listOf(Types::ProductsType()),
+                        'args' => [
+                            'category' => Type::string(),
+                        ],
+                        'resolve' => function ($root, $args) use ($conn) {
                             $query = "SELECT * FROM products";
                             $stmt = $conn->prepare($query);
+                            /*   $stmt->bindValue(':category', $args['category']); */
                             $stmt->execute();
-                            $products =  $stmt->fetchAll(PDO::FETCH_ASSOC);
-                            if (empty($products)) {
-                                return []; // Return empty array if products array is empty
-                            }
-
-                            return array_map(function ($item) {
-
-                                return [
-                                    'id' => $item['id'] ?? '',
-                                    'name' => $item['name'] ?? '',
-                                    'inStock' => $item['inStock'] ?? false,
-                                    'gallery' => json_decode($item['gallery'], true) ?? [],
-                                    'description' => $item['description'] ?? '',
-                                    'category' => $item['category'] ?? '',
-                                    'attributes' =>  json_decode($item['attributes'], true) ?? [],
-                                    'prices' => json_decode($item['prices'], true) ?? [], // Decode JSON string to array
-                                    'brand' => $item['brand'] ??  ''
-
-                                ];
-                            }, $products);
+                            $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                            return   $products;
                         },
                     ],
+
+
+
                 ],
             ]);
-
-            /*  $mutationType = new ObjectType([
+            $mutationType = new ObjectType([
                 'name' => 'Mutation',
                 'fields' => [
-                    'sum' => [
-                        'type' => Type::int(),
+                    'updateProduct' => [
+                        'type' => Type::boolean(), // Return true if the mutation is successful--is necesary
                         'args' => [
-                            'x' => ['type' => Type::int()],
-                            'y' => ['type' => Type::int()],
+                            'oldName' =>  Type::string(),
+                            'newName' =>  Type::string(),
                         ],
-                        'resolve' => static fn ($calc, array $args): int => $args['x'] + $args['y'],
+                        'resolve' => function ($root, $args) use ($conn) {
+
+
+                            // Prepare and execute SQL update query to change category names
+                            $oldName = $args['oldName'];
+                            $newName = $args['newName'];
+                            $query = "UPDATE products SET name = :newName WHERE name = :oldName ";
+                            $stmt = $conn->prepare($query);
+                            $stmt->bindParam(':newName', $newName);
+                            $stmt->bindParam(':oldName', $oldName);
+                            $result = $stmt->execute();
+                            echo '😊' . json_encode($args);
+                            return $result;  // Return true if the update was successful, false otherwise
+
+                        },
                     ],
-                ],
-            ]); */
+
+
+                    'insertProduct' => [
+                        'type' => Type::boolean(), // Return true if the mutation is successful
+                        'args' => [
+                            'test' => Type::string(),
+                        ],
+                        'resolve' => function ($root, $args) use ($conn) {
+                            return $args['test'];
+                        },
+                    ],
+                ]
+            ]);
 
             $schema = new Schema(
                 (new SchemaConfig())
                     ->setQuery($queryType)
-                /*  ->setMutation($mutationType) */
+                    ->setMutation($mutationType)
             );
 
             $rawInput = file_get_contents('php://input');
@@ -98,11 +108,17 @@ class GraphQL
             $input = json_decode($rawInput, true);
             /*  $query = $input['query']; */
 
-            $query = '{products{id, attributes{items{displayValue}}}}';
-            $variableValues = $input['variables'] ?? null;
 
-            $rootValue = ['prefix' => 'You said: '];
-            $result = GraphQLBase::executeQuery($schema, $query, $rootValue, null, $variableValues);
+
+            /*    $query = ' mutation{
+                changeCategory
+            }'; */
+
+            $query = ' mutation {
+                updateProduct(oldName: "shjaj", newName: "PlayStation 5")
+              }';
+
+            $result = GraphQLBase::executeQuery($schema, $query);
             $output = $result->toArray();
         } catch (Throwable $e) {
             $output = [
