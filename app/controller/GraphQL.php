@@ -85,10 +85,29 @@ class GraphQL
                     'insertProduct' => [
                         'type' => Type::boolean(), // Return true if the mutation is successful
                         'args' => [
-                            'test' => Type::string(),
+                            'id' =>  Type::string(),
+                            'name' =>  Type::string(),
+                            'inStock' =>  Type::boolean(),
+                            'gallery' =>  Type::listOf(Type::string()),
+                            'description' =>  Type::string(),
+                            'category' =>   Type::string(),
+                            'brand' =>   Type::string(),
                         ],
                         'resolve' => function ($root, $args) use ($conn) {
-                            return $args['test'];
+
+                            $productQuery = "INSERT INTO products ( id,name, inStock,description, category,brand) 
+                            VALUES ( :id , :name, :inStock, :description, :category,  :brand)";
+                            $productStmt = $conn->prepare($productQuery);
+                            $productStmt->execute([
+                                ':id' => $args['id'],
+                                ':name' => $args['name'],
+                                ':inStock' => $args['inStock'],
+                                ':description' => $args['description'],
+                                ':category' => $args['category'],
+                                ':brand' => $args['brand'],
+
+                            ]);
+                            return 'Product added successfully';
                         },
                     ],
                 ]
@@ -115,7 +134,7 @@ class GraphQL
             }'; */
 
             $query = ' mutation {
-                updateProduct(oldName: "shjaj", newName: "PlayStation 5")
+                insertProduct(id : "1999", category: "clothes" , name:"shijak", description: "not my", inStock:true, brand:"gucci")
               }';
 
             $result = GraphQLBase::executeQuery($schema, $query);
