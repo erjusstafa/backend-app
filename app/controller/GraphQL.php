@@ -93,47 +93,48 @@ class GraphQL
                             'id' =>  Type::string(),
                             'name' =>  Type::string(),
                             'inStock' =>  Type::boolean(),
-                            /* 'gallery' =>  Type::listOf(Type::string()),
+                            'gallery' =>  Type::listOf(Type::string()),
                             'description' =>  Type::string(),
                             'category' =>   Type::string(),
-                            'brand' =>   Type::string(), */
+                            'brand' =>   Type::string(),
                         ],
                         'resolve' => function ($root, $args) use ($conn) {
+                            $galleryJson = json_encode($args['gallery']);
 
-                            $productQuery = "INSERT INTO products ( id,name, inStock) 
-                            VALUES ( :id , :name, :inStock)";
+                            $productQuery = "INSERT INTO products (id, name, inStock, gallery, description, category, brand) 
+                                             VALUES (:id, :name, :inStock, :gallery, :description, :category, :brand)";
                             $productStmt = $conn->prepare($productQuery);
                             $productStmt->execute([
                                 ':id' => $args['id'],
                                 ':name' => $args['name'],
                                 ':inStock' => $args['inStock'],
-                                /*  ':description' => $args['description'],
+                                ':gallery' => $galleryJson, // Use the JSON representation of the gallery array
+                                ':description' => $args['description'],
                                 ':category' => $args['category'],
-                                ':brand' => $args['brand'], */
-
+                                ':brand' => $args['brand'],
                             ]);
                             return 'Product added successfully';
                         },
                     ],
                 ]
             ]);
-        
-            
+
+
             $schema = new Schema(
                 (new SchemaConfig())
-                ->setQuery($queryType)
-                ->setMutation($mutationType)
+                    ->setQuery($queryType)
+                    ->setMutation($mutationType)
             );
-        
+
             $rawInput = file_get_contents('php://input');
             if ($rawInput === false) {
                 throw new RuntimeException('Failed to get php://input');
             }
-        
+
             $input = json_decode($rawInput, true);
             $query = $input['query'];
             $variableValues = $input['variables'] ?? null;
-        
+
             $rootValue = ['prefix' => 'You said: '];
             $result = GraphQLBase::executeQuery($schema, $query, $rootValue, null, $variableValues);
             $output = $result->toArray();
