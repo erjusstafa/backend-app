@@ -38,21 +38,29 @@ class GraphQL
 
                     'products' => [
                         'type' => Type::listOf(Types::ProductsType()),
-                        'args' => [
-                            'category' => Type::string(),
-                        ],
                         'resolve' => function ($root, $args) use ($conn) {
+                            // Execute a query to fetch products names
                             $query = "SELECT * FROM products";
                             $stmt = $conn->prepare($query);
-                            /*   $stmt->bindValue(':category', $args['category']); */
                             $stmt->execute();
-                            $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                            return   $products;
+                            $products =  $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                            return array_map(function ($item) {
+                                return [
+                                    'id' => $item['id'] ?? '',
+                                    'name' => $item['name'] ?? '',
+                                    'inStock' => $item['inStock'] ?? false,
+                                    'gallery' => json_decode($item['gallery'], true) ?? [],
+                                    'description' => $item['description'] ?? '',
+                                    'category' => $item['category'] ?? '',
+                                    'attributes' =>  json_decode($item['attributes'], true) ?? [],
+                                    'prices' => json_decode($item['prices'], true) ?? [], // Decode JSON string to array
+                                    'brand' => $item['brand'] ??  ''
+
+                                ];
+                            }, $products);
                         },
                     ],
-
-
-
                 ],
             ]);
             $mutationType = new ObjectType([
@@ -61,21 +69,18 @@ class GraphQL
                     'updateProduct' => [
                         'type' => Type::boolean(), // Return true if the mutation is successful--is necesary
                         'args' => [
-                            'oldName' =>  Type::string(),
+                            'id' => Type::string(),
                             'newName' =>  Type::string(),
                         ],
                         'resolve' => function ($root, $args) use ($conn) {
-
-
                             // Prepare and execute SQL update query to change category names
-                            $oldName = $args['oldName'];
+                            $id = $args['id'];
                             $newName = $args['newName'];
-                            $query = "UPDATE products SET name = :newName WHERE name = :oldName ";
+                            $query = "UPDATE products SET name = :newName WHERE id = :id ";
                             $stmt = $conn->prepare($query);
                             $stmt->bindParam(':newName', $newName);
-                            $stmt->bindParam(':oldName', $oldName);
+                            $stmt->bindParam(':id', $id);
                             $result = $stmt->execute();
-                            echo '😊' . json_encode($args);
                             return $result;  // Return true if the update was successful, false otherwise
 
                         },
@@ -88,23 +93,23 @@ class GraphQL
                             'id' =>  Type::string(),
                             'name' =>  Type::string(),
                             'inStock' =>  Type::boolean(),
-                            'gallery' =>  Type::listOf(Type::string()),
+                            /* 'gallery' =>  Type::listOf(Type::string()),
                             'description' =>  Type::string(),
                             'category' =>   Type::string(),
-                            'brand' =>   Type::string(),
+                            'brand' =>   Type::string(), */
                         ],
                         'resolve' => function ($root, $args) use ($conn) {
 
-                            $productQuery = "INSERT INTO products ( id,name, inStock,description, category,brand) 
-                            VALUES ( :id , :name, :inStock, :description, :category,  :brand)";
+                            $productQuery = "INSERT INTO products ( id,name, inStock) 
+                            VALUES ( :id , :name, :inStock)";
                             $productStmt = $conn->prepare($productQuery);
                             $productStmt->execute([
                                 ':id' => $args['id'],
                                 ':name' => $args['name'],
                                 ':inStock' => $args['inStock'],
-                                ':description' => $args['description'],
+                                /*  ':description' => $args['description'],
                                 ':category' => $args['category'],
-                                ':brand' => $args['brand'],
+                                ':brand' => $args['brand'], */
 
                             ]);
                             return 'Product added successfully';
@@ -112,32 +117,25 @@ class GraphQL
                     ],
                 ]
             ]);
-
+        
+            
             $schema = new Schema(
                 (new SchemaConfig())
-                    ->setQuery($queryType)
-                    ->setMutation($mutationType)
+                ->setQuery($queryType)
+                ->setMutation($mutationType)
             );
-
+        
             $rawInput = file_get_contents('php://input');
             if ($rawInput === false) {
                 throw new RuntimeException('Failed to get php://input');
             }
-
+        
             $input = json_decode($rawInput, true);
-            /*  $query = $input['query']; */
-
-
-
-            /*    $query = ' mutation{
-                changeCategory
-            }'; */
-
-            $query = ' mutation {
-                insertProduct(id : "1999", category: "clothes" , name:"shijak", description: "not my", inStock:true, brand:"gucci")
-              }';
-
-            $result = GraphQLBase::executeQuery($schema, $query);
+            $query = $input['query'];
+            $variableValues = $input['variables'] ?? null;
+        
+            $rootValue = ['prefix' => 'You said: '];
+            $result = GraphQLBase::executeQuery($schema, $query, $rootValue, null, $variableValues);
             $output = $result->toArray();
         } catch (Throwable $e) {
             $output = [

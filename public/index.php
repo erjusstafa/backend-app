@@ -42,7 +42,7 @@ echo "Products:\n";
 
 
 
- $dispatcher = FastRoute\simpleDispatcher(function(FastRoute\RouteCollector $r) {
+$dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) {
     $r->post('/graphql', [App\Controller\GraphQL::class, 'handle']);
 });
 
@@ -60,13 +60,13 @@ switch ($routeInfo[0]) {
         $allowedMethods = $routeInfo[1];
         echo "test2";
 
-        // ... 405 Method Not Allowed
         break;
     case FastRoute\Dispatcher::FOUND:
         $handler = $routeInfo[1];
         $vars = $routeInfo[2];
         echo $handler($vars);
-        echo "test3";
+        $result = GraphQL::handle($conn);
+        echo $result;
 
         break;
 }
