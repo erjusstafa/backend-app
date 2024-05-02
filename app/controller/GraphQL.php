@@ -3,8 +3,10 @@
 namespace App\Controller;
 
 require_once 'types.php';
+header('Content-Type: application/json; charset=UTF-8');
 
 use GraphQL\GraphQL as GraphQLBase;
+use GraphQL\Type\Definition\InputObjectType;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
@@ -19,6 +21,24 @@ class GraphQL
     static public function handle($conn)
     {
         try {
+
+            $attributeSetType = new InputObjectType([
+                'name' => 'AttributeSet',
+                'fields' => [
+                    'id' => ['type' => Type::string()],
+                    'name' => ['type' => Type::string()],
+                    'type' => ['type' => Type::string()],
+                    'items' => ['type' => Type::listOf(new InputObjectType([
+                        'name' => 'items',
+                        'fields' => [
+                            'id' => ['type' => Type::string()],
+                            'displayValue' => ['type' => Type::string()],
+                            'value' => ['type' => Type::string()]
+                        ]
+                    ]))]
+                ]
+            ]);
+
 
             $queryType = new ObjectType([
                 'name' => 'Query',
@@ -91,27 +111,17 @@ class GraphQL
                         'type' => Type::boolean(), // Return true if the mutation is successful
                         'args' => [
                             'id' =>  Type::string(),
-                            'name' =>  Type::string(),
-                            'inStock' =>  Type::boolean(),
-                            'gallery' =>  Type::listOf(Type::string()),
-                            'description' =>  Type::string(),
-                            'category' =>   Type::string(),
-                            'brand' =>   Type::string(),
+                            'attributes' =>  ['type' => $attributeSetType],
                         ],
                         'resolve' => function ($root, $args) use ($conn) {
-                            $galleryJson = json_encode($args['gallery']);
-
-                            $productQuery = "INSERT INTO products (id, name, inStock, gallery, description, category, brand) 
-                                             VALUES (:id, :name, :inStock, :gallery, :description, :category, :brand)";
+                            $id = $args['id'];
+                            $productQuery = "INSERT INTO products (id, attributes)  VALUES (:id,:attributes)";
                             $productStmt = $conn->prepare($productQuery);
+
                             $productStmt->execute([
-                                ':id' => $args['id'],
-                                ':name' => $args['name'],
-                                ':inStock' => $args['inStock'],
-                                ':gallery' => $galleryJson, // Use the JSON representation of the gallery array
-                                ':description' => $args['description'],
-                                ':category' => $args['category'],
-                                ':brand' => $args['brand'],
+                                ':id' =>  $id,
+                                ':attributes' =>  json_encode($args['attributes']),
+
                             ]);
                             return 'Product added successfully';
                         },
@@ -146,7 +156,6 @@ class GraphQL
             ];
         }
 
-        header('Content-Type: application/json; charset=UTF-8');
         return json_encode($output);
     }
 }
