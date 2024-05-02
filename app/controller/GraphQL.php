@@ -22,20 +22,53 @@ class GraphQL
     {
         try {
 
-            $attributeSetType = new InputObjectType([
-                'name' => 'AttributeSet',
+            $attributeInputType = new InputObjectType([
+                'name' => 'AttributeInput',
                 'fields' => [
                     'id' => ['type' => Type::string()],
                     'name' => ['type' => Type::string()],
                     'type' => ['type' => Type::string()],
                     'items' => ['type' => Type::listOf(new InputObjectType([
-                        'name' => 'items',
+                        'name' => 'ItemInput',
                         'fields' => [
                             'id' => ['type' => Type::string()],
                             'displayValue' => ['type' => Type::string()],
                             'value' => ['type' => Type::string()]
                         ]
                     ]))]
+                ]
+            ]);
+            $productType = new InputObjectType([
+                'name' => 'Product',
+                'fields' => [
+                    'id' => ['type' => Type::string()],
+                    'name' => ['type' => Type::string()],
+                    'inStock' => ['type' => Type::boolean()],
+                    'gallery' => ['type' => Type::listOf(Type::string())],
+                    'description' => ['type' => Type::string()],
+                    'category' => ['type' => Type::string()],
+                    'attributes' => [
+                        'type' => Type::listOf($attributeInputType),
+                        // Resolver function to fetch attributes for the product
+                        'resolve' => function ($product) {
+                            //Fetch and return attributes data for the product
+                            return $product['attributes'] ?? [];   //Placeholder for attributes data
+                        }
+                    ],
+                    'prices' => Type::listOf(new InputObjectType([
+                        'name' => 'Price',
+                        'fields' => [
+                            'amount' => Type::float(),
+                            'currency' => new InputObjectType([
+                                'name' => 'currency',
+                                'fields' => [
+                                    'label' => Type::string(),
+                                    'symbol' => Type::string(),
+                                ],
+                            ]),
+                        ],
+                    ])),
+                    'brand' => ['type' => Type::string()]
                 ]
             ]);
 
@@ -90,42 +123,44 @@ class GraphQL
                         'type' => Type::boolean(), // Return true if the mutation is successful--is necesary
                         'args' => [
                             'id' => Type::string(),
-                            'newName' =>  Type::string(),
+                            'name' =>  Type::string(),
                         ],
                         'resolve' => function ($root, $args) use ($conn) {
                             // Prepare and execute SQL update query to change category names
                             $id = $args['id'];
-                            $newName = $args['newName'];
-                            $query = "UPDATE products SET name = :newName WHERE id = :id ";
+                            $newName = $args['name'];
+                            $query = "UPDATE products SET name = :name WHERE id = :id ";
                             $stmt = $conn->prepare($query);
-                            $stmt->bindParam(':newName', $newName);
+                            $stmt->bindParam(':name', $newName);
                             $stmt->bindParam(':id', $id);
                             $result = $stmt->execute();
                             return $result;  // Return true if the update was successful, false otherwise
 
                         },
                     ],
-
-
+                    
                     'insertProduct' => [
                         'type' => Type::boolean(), // Return true if the mutation is successful
                         'args' => [
-                            'id' =>  Type::string(),
-                            'attributes' =>  ['type' => $attributeSetType],
+                            'id' => Type::string(),
+                            'attributes' => $attributeInputType, // Use the input type for attributes
                         ],
                         'resolve' => function ($root, $args) use ($conn) {
                             $id = $args['id'];
-                            $productQuery = "INSERT INTO products (id, attributes)  VALUES (:id,:attributes)";
+                            $attributes = json_encode($args['attributes']); // Serialize attributes to JSON
+            
+                            // Prepare and execute the SQL query
+                            $productQuery = "INSERT INTO products (id, attributes) VALUES (:id, :attributes)";
                             $productStmt = $conn->prepare($productQuery);
-
                             $productStmt->execute([
-                                ':id' =>  $id,
-                                ':attributes' =>  json_encode($args['attributes']),
-
+                                ':id' => $id,
+                                ':attributes' => $attributes,
                             ]);
-                            return 'Product added successfully';
+            
+                            return true; // Indicate success
                         },
-                    ],
+                 
+                    ], 
                 ]
             ]);
 
@@ -145,8 +180,7 @@ class GraphQL
             $query = $input['query'];
             $variableValues = $input['variables'] ?? null;
 
-            $rootValue = ['prefix' => 'You said: '];
-            $result = GraphQLBase::executeQuery($schema, $query, $rootValue, null, $variableValues);
+            $result = GraphQLBase::executeQuery($schema, $query);
             $output = $result->toArray();
         } catch (Throwable $e) {
             $output = [
