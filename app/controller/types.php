@@ -1,6 +1,5 @@
 <?php
 
-// Define a category type
 namespace App\Controller;
 
 use GraphQL\Type\Definition\ObjectType;
@@ -51,7 +50,7 @@ class Types
 
     public  static function ProductsType()
     {
-         $productType = new ObjectType([
+        $productType = new ObjectType([
             'name' => 'Product',
             'fields' => [
                 'id' => ['type' => Type::string()],

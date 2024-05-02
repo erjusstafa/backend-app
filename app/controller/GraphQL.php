@@ -3,10 +3,11 @@
 namespace App\Controller;
 
 require_once 'types.php';
-header('Content-Type: application/json; charset=UTF-8');
+require_once 'inputType.php';
 
+use App\Controller\InputTypes;
+use App\Controller\Types;
 use GraphQL\GraphQL as GraphQLBase;
-use GraphQL\Type\Definition\InputObjectType;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
@@ -21,57 +22,6 @@ class GraphQL
     static public function handle($conn)
     {
         try {
-
-            $attributeInputType = new InputObjectType([
-                'name' => 'AttributeInput',
-                'fields' => [
-                    'id' => ['type' => Type::string()],
-                    'name' => ['type' => Type::string()],
-                    'type' => ['type' => Type::string()],
-                    'items' => ['type' => Type::listOf(new InputObjectType([
-                        'name' => 'ItemInput',
-                        'fields' => [
-                            'id' => ['type' => Type::string()],
-                            'displayValue' => ['type' => Type::string()],
-                            'value' => ['type' => Type::string()]
-                        ]
-                    ]))]
-                ]
-            ]);
-            $productType = new InputObjectType([
-                'name' => 'Product',
-                'fields' => [
-                    'id' => ['type' => Type::string()],
-                    'name' => ['type' => Type::string()],
-                    'inStock' => ['type' => Type::boolean()],
-                    'gallery' => ['type' => Type::listOf(Type::string())],
-                    'description' => ['type' => Type::string()],
-                    'category' => ['type' => Type::string()],
-                    'attributes' => [
-                        'type' => Type::listOf($attributeInputType),
-                        // Resolver function to fetch attributes for the product
-                        'resolve' => function ($product) {
-                            //Fetch and return attributes data for the product
-                            return $product['attributes'] ?? [];   //Placeholder for attributes data
-                        }
-                    ],
-                    'prices' => Type::listOf(new InputObjectType([
-                        'name' => 'Price',
-                        'fields' => [
-                            'amount' => Type::float(),
-                            'currency' => new InputObjectType([
-                                'name' => 'currency',
-                                'fields' => [
-                                    'label' => Type::string(),
-                                    'symbol' => Type::string(),
-                                ],
-                            ]),
-                        ],
-                    ])),
-                    'brand' => ['type' => Type::string()]
-                ]
-            ]);
-
 
             $queryType = new ObjectType([
                 'name' => 'Query',
@@ -138,32 +88,46 @@ class GraphQL
 
                         },
                     ],
-                    
+
                     'insertProduct' => [
                         'type' => Type::boolean(), // Return true if the mutation is successful
                         'args' => [
-                            'id' => Type::string(),
-                            'attributes' => $attributeInputType, // Use the input type for attributes
+                            'productInput' => InputTypes::ProductsInputType(), // Use the main ProductInput type
                         ],
                         'resolve' => function ($root, $args) use ($conn) {
-                            $id = $args['id'];
-                            $attributes = json_encode($args['attributes']); // Serialize attributes to JSON
-            
-                            // Prepare and execute the SQL query
-                            $productQuery = "INSERT INTO products (id, attributes) VALUES (:id, :attributes)";
+                            $product = $args['productInput'];
+
+                            // Extract product fields from the input object
+                            $id = $product['id'];
+                            $name = $product['name'];
+                            $inStock = $product['inStock'];
+                            $gallery = json_encode($product['gallery']);
+                            $description = $product['description'];
+                            $category = $product['category'];
+                            $attributes = json_encode($product['attributes']);
+                            $prices = json_encode($product['prices']);
+                            $brand = $product['brand'];
+
+                            $productQuery = "INSERT INTO products (id, name, inStock, gallery, description, category, attributes, prices, brand) VALUES (:id, :name, :inStock, :gallery, :description, :category, :attributes, :prices, :brand)";
                             $productStmt = $conn->prepare($productQuery);
                             $productStmt->execute([
                                 ':id' => $id,
+                                ':name' => $name,
+                                ':inStock' => $inStock,
+                                ':gallery' => $gallery,
+                                ':description' => $description,
+                                ':category' => $category,
                                 ':attributes' => $attributes,
+                                ':prices' => $prices,
+                                ':brand' => $brand,
                             ]);
-            
+
                             return true; // Indicate success
-                        },
-                 
-                    ], 
+                        }
+
+                    ],
                 ]
             ]);
-
 
             $schema = new Schema(
                 (new SchemaConfig())
