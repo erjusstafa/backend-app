@@ -1,5 +1,7 @@
+
 <?php
 
+use App\Controller\Database;
 use App\Controller\GraphQL;
 
 require_once  '../app/services/database.php';
@@ -7,39 +9,16 @@ require_once  '../app/models/category.php';
 require_once  '../app/models/product.php';
 require_once  '../app/models/attribute.php';
 require_once '../vendor/autoload.php';
+$conf = require_once '../config/index.php';
 
-
-// Now you can get the database connection and use it for executing queries
-$database = new Database();
-$conn = $database->connect();
-
-//get data from json file 
+$categories = new Category($conf['host'], $conf['database'], $conf['username'], $conf['pass']);
+$categories->createTable();
 $json_data = file_get_contents('data.json');
 $data = json_decode($json_data, true);
 
-// Instantiate models
-$categoryModels = [];
 foreach ($data['data']['categories'] as $categoryData) {
-    $categoryModels[] = new Category($categoryData);
+    $categories->insertCategory($categoryData['name']);
 }
-
-$productModels = [];
-foreach ($data['data']['products'] as $productData) {
-    $productModels[] = new Product($productData);
-}
-
-// Display categories && products -> to populate mysql
-/* echo "Categories:\n";
-foreach ($categoryModels as $categoryModel) {
-    echo  $categoryModel->display() . "\n";
-}
-echo "Products:\n";
-foreach ($productModels as $productModel) {
-    echo $productModel->display();
-}
- */
-
-
 
 $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) {
     $r->post('/graphql', [App\Controller\GraphQL::class, 'handle']);
@@ -52,19 +31,18 @@ $routeInfo = $dispatcher->dispatch(
 
 switch ($routeInfo[0]) {
     case FastRoute\Dispatcher::NOT_FOUND:
-        $result = GraphQL::handle($conn);
+        $result = GraphQL::handle($conf);
         echo $result;
         break;
     case FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
         $allowedMethods = $routeInfo[1];
-        echo "test2";
-
+        echo "graphql connected";
         break;
     case FastRoute\Dispatcher::FOUND:
         $handler = $routeInfo[1];
         $vars = $routeInfo[2];
         echo $handler($vars);
-        $result = GraphQL::handle($conn);
+        $result = GraphQL::handle($conf);
         echo $result;
 
         break;

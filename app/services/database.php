@@ -1,26 +1,31 @@
 <?php
+
+namespace App\Controller;
+
+use PDO;
+use PDOException;
+
 class Database
 {
-    private $host = 'localhost';
-    private $dbname = 'test4';
-    private $username = 'root';
-    private $password = '';
     protected $conn;
-
-
-    public function __construct()
-    {
-        $this->conn = null;
-    }
-
-    public function connect()
+    public function __construct($host, $dbname, $username, $password)
     {
         try {
-            $conn = new PDO("mysql:host=$this->host;dbname=$this->dbname", $this->username, $this->password);
-            $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->conn = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (PDOException $e) {
-            echo "Connection failed: " . $e->getMessage();
+            die("Connection failed 😰: " . $e->getMessage());
         }
-        return $conn;
+    }
+
+    public function executeData($query, $params = [])
+    {
+        try {
+            $statement = $this->conn->prepare($query);
+            $statement->execute($params);
+            return $statement;
+        } catch (PDOException $e) {
+            die("Query failed: " . $e->getMessage());
+        }
     }
 }
