@@ -12,7 +12,6 @@ class Types
     // Define the CategoriesType 
     public  static function CategoriesType()
     {
-
         $categoryType = new ObjectType([
             'name' => 'Category',
             'fields' => [

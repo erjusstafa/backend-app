@@ -1,5 +1,4 @@
 <?php
-// Require the necessary files
 
 use App\Controller\GraphQL;
 
@@ -29,15 +28,15 @@ foreach ($data['data']['products'] as $productData) {
     $productModels[] = new Product($productData);
 }
 
-// Display categories && products
+// Display categories && products -> to populate mysql
 /* echo "Categories:\n";
 foreach ($categoryModels as $categoryModel) {
     echo  $categoryModel->display() . "\n";
-}  
+}
 echo "Products:\n";
-  foreach ($productModels as $productModel) {
+foreach ($productModels as $productModel) {
     echo $productModel->display();
-} 
+}
  */
 
 
