@@ -5,7 +5,7 @@ namespace App\Controller;
 use PDO;
 use PDOException;
 
-class Database
+abstract class Database
 {
     protected $conn;
     public function __construct($host, $dbname, $username, $password)
@@ -18,7 +18,9 @@ class Database
         }
     }
 
-    public function executeData($query, $params = [])
+    abstract public function executeData($query, $params = []);
+
+   /*  public function executeData($query, $params = [])
     {
         try {
             $statement = $this->conn->prepare($query);
@@ -27,5 +29,5 @@ class Database
         } catch (PDOException $e) {
             die("Query failed: " . $e->getMessage());
         }
-    }
+    } */
 }

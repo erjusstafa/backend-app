@@ -1,13 +1,17 @@
 <?php
-require_once 'models.php';
 
-class Atribute extends Models
+use App\Controller\Database;
+
+class Atribute extends Database
 {
-    public function display()
+    public function executeData($query, $params = [])
     {
-        return $this->data['id'];
-    /*     foreach ($this->data['items'] as $item) {
-            echo "😍" . $item['value'];
-        } */
+        try {
+            $statement = $this->conn->prepare($query);
+            $statement->execute($params);
+            return $statement;
+        } catch (PDOException $e) {
+            die("Query failed: " . $e->getMessage());
+        }
     }
 }

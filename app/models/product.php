@@ -1,10 +1,26 @@
 <?php
-require_once 'models.php';
+
+use App\Controller\Database;
+
 require_once 'attribute.php';
-class Product extends Models
+
+
+
+class Product extends Database
 {
-    public function display()
+    public function executeData($query, $params = [])
     {
+        
+        
+        try {
+            $statement = $this->conn->prepare($query);
+            $statement->execute($params);
+            return $statement;
+        } catch (PDOException $e) {
+            die("Query failed: " . $e->getMessage());
+        }
+    }
+        /* 
         $output = $this->data['id'] . "\n";
         $output .= $this->data['name'] . "\n";
         $output .= $this->data['inStock'] . "\n";
@@ -19,6 +35,6 @@ class Product extends Models
             $attr = new Atribute($item);
             $output .= $attr->display();
         }
-        return $output;
-    }
+        return $output; */
+
 }

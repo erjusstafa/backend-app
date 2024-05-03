@@ -1,13 +1,19 @@
 <?php
+namespace App\Controller;
 
-abstract class Models
+use App\Controller\Database;
+use PDOException;
+
+ class Models extends Database
 {
-    protected $data;
-
-    public function __construct($data)
+    public function executeData($query, $params = [])
     {
-        $this->data = $data;
+        try {
+            $statement = $this->conn->prepare($query);
+            $statement->execute($params);
+            return $statement;
+        } catch (PDOException $e) {
+            die("Query failed: " . $e->getMessage());
+        }
     }
-
-    abstract public function display();
 }

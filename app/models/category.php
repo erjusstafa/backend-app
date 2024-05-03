@@ -39,4 +39,15 @@ class Category extends Database
     $categories = $statement->fetchAll(PDO::FETCH_ASSOC);
     return $categories;
   }
+
+  public function executeData($query, $params = [])
+    {
+        try {
+            $statement = $this->conn->prepare($query);
+            $statement->execute($params);
+            return $statement;
+        } catch (PDOException $e) {
+            die("Query failed: " . $e->getMessage());
+        }
+    }
 }
