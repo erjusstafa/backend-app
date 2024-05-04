@@ -44,26 +44,59 @@ class GraphQL
                     ],
                 ],
             ]);
-            $mutationType = new ObjectType([
+            /*  $mutationType = new ObjectType([
                 'name' => 'Mutation',
                 'fields' => [
                     'inserProducts' => [
                         'type' => Type::listOf(Type::string()),
                         'resolve' => function ($root, $args, $context) use ($conf) {
-                            /* $products = new Category($conf['host'], $conf['database'], $conf['username'], $conf['pass']);
-                            return $products->getAllCategories(); */
+                            $products = new Category($conf['host'], $conf['database'], $conf['username'], $conf['pass']);
+                            return $products->getAllCategories();  
 
                             return;
                         },
                     ],
                 ]
-            ]);
+            ]); */
 
+
+            $mutationType = new ObjectType([
+                'name' => 'Mutation',
+                'fields' => [
+                    'updateProduct' => [
+                        'type' => Type::boolean(), // Return true if the mutation is successful--is necesary
+                        'args' => [
+                            'id' => Type::string(),
+                            'name' =>  Type::string(),
+                        ],
+                        'resolve' => function ($root, $args) use ($conf) {
+                            $id = $args['id'];
+                            $name = $args['name'];
+                            $updProduct = new Product($conf['host'], $conf['database'], $conf['username'], $conf['pass']);
+                            return $updProduct->updateProduct($id, $name);
+                        },
+                    ],
+
+                    'insertNewProduct' => [
+                        'type' => Type::boolean(), // Return true if the mutation is successful
+                        'args' => [
+                            'productInput' => InputTypes::ProductsInputType(),
+                        ],
+                        'resolve' => function ($root, $args) use ($conf) {
+                            $product = $args['productInput'];
+
+                            $addProduct = new Product($conf['host'], $conf['database'], $conf['username'], $conf['pass']);
+                            return $addProduct->insertNewProduct($product);
+                        }
+
+                    ],
+                ]
+            ]);
 
             $schema = new Schema(
                 (new SchemaConfig())
                     ->setQuery($queryType)
-                /*  ->setMutation($mutationType) */
+                    ->setMutation($mutationType)
 
             );
 

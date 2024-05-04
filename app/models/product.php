@@ -22,6 +22,7 @@ class Product extends Database
         $this->executeData($query);
     }
 
+
     public function insertProduct($productsData)
     {
 
@@ -35,10 +36,13 @@ class Product extends Database
         $attributeJson = json_encode($productsData['attributes'] ?? []);
         $priceJson = json_encode($productsData['prices'] ?? []);
 
+
+        $this->encodeAttributes($attributeJson);
+
         // Insert product into products table
         $query = "INSERT INTO products (id, name, inStock, gallery, description, category, attributes,prices, brand) VALUES (?, ?, ?, ?, ?, ?,?, ?,?)";
 
-        $stmt = $this->executeData($query, [
+        $this->executeData($query, [
             $productsData['id'],
             $productsData['name'],
             $productsData['inStock'],
@@ -57,6 +61,13 @@ class Product extends Database
         $stmt = $this->executeData($query, [$productId]);
         $count = $stmt->fetchColumn();
         return $count > 0;
+    }
+
+
+    public  function encodeAttributes($attributesData)
+    {
+        $attributes = new Atribute('localhost', 'test5', 'root', '');
+        return $attributes->encodeAttributes($attributesData);
     }
 
 
@@ -80,6 +91,48 @@ class Product extends Database
             ];
         }, $products);
     }
+
+
+    public function updateProduct($id, $name)
+    {
+
+        $query = "UPDATE products SET name = :name WHERE id = :id ";
+        $stmt =  $this->conn->prepare($query);
+        $stmt->bindParam(':name', $name);
+        $stmt->bindParam(':id', $id);
+        $result = $stmt->execute();
+        return $result;
+    }
+
+    public function insertNewProduct($product)
+    {
+
+        $id = $product['id'];
+        $name = $product['name'];
+        $inStock = $product['inStock'];
+        $gallery = json_encode($product['gallery']);
+        $description = $product['description'];
+        $category = $product['category'];
+        $attributes = json_encode($product['attributes']);
+        $prices = json_encode($product['prices']);
+        $brand = $product['brand'];
+
+        $query = "INSERT INTO products (id, name, inStock, gallery, description, category, attributes, prices, brand) VALUES (:id, :name, :inStock, :gallery, :description, :category, :attributes, :prices, :brand)";
+        $this->executeData($query, [
+            ':id' => $id,
+            ':name' => $name,
+            ':inStock' =>  $inStock,
+            ':gallery' => $gallery,
+            ':description' => $description,
+            ':category' => $category,
+            ':attributes' => $attributes,
+            ':prices' => $prices,
+            ':brand' => $brand,
+        ]);
+
+        return true;
+    }
+
 
     public function executeData($query, $params = [])
     {
