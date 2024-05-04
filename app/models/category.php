@@ -14,6 +14,7 @@ class Category extends Database
     $this->executeData($query);
   }
 
+
   public function categoryExists($name)
   {
     $query = "SELECT COUNT(*) FROM categories WHERE name = :name";
@@ -29,25 +30,29 @@ class Category extends Database
     } else {
       $query = "INSERT INTO categories (name) VALUES (:name)";
       $this->executeData($query, [':name' => $name]);
-      echo "Data inserted successfully";
     }
   }
   public function getAllCategories()
   {
     $query = "SELECT name FROM categories";
-    $statement = $this->executeData($query);
-    $categories = $statement->fetchAll(PDO::FETCH_ASSOC);
-    return $categories;
+    $stmt = $this->executeData($query);
+    $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return array_map(function ($item) {
+      return [
+        'name' => $item['name'] ?? '',
+      ];
+    }, $categories);
   }
 
+
   public function executeData($query, $params = [])
-    {
-        try {
-            $statement = $this->conn->prepare($query);
-            $statement->execute($params);
-            return $statement;
-        } catch (PDOException $e) {
-            die("Query failed: " . $e->getMessage());
-        }
+  {
+    try {
+      $statement = $this->conn->prepare($query);
+      $statement->execute($params);
+      return $statement;
+    } catch (PDOException $e) {
+      die("Query failed: " . $e->getMessage());
     }
+  }
 }

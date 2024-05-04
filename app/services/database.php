@@ -19,15 +19,4 @@ abstract class Database
     }
 
     abstract public function executeData($query, $params = []);
-
-   /*  public function executeData($query, $params = [])
-    {
-        try {
-            $statement = $this->conn->prepare($query);
-            $statement->execute($params);
-            return $statement;
-        } catch (PDOException $e) {
-            die("Query failed: " . $e->getMessage());
-        }
-    } */
 }

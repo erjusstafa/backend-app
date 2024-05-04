@@ -14,6 +14,7 @@ use GraphQL\Type\Schema;
 use PDO;
 use Throwable;
 use GraphQL\Type\SchemaConfig;
+use Product;
 use RuntimeException;
 
 class GraphQL
@@ -33,19 +34,28 @@ class GraphQL
                             return $categories->getAllCategories();
                         },
                     ],
+
+                    'products' => [
+                        'type' => Type::listOf(Types::ProductsType()),
+                        'resolve' => function ($root, $args, $context) use ($conf) {
+                            $products = new Product($conf['host'], $conf['database'], $conf['username'], $conf['pass']);
+                            return $products->getAllProducts();
+                        },
+                    ],
                 ],
             ]);
             $mutationType = new ObjectType([
                 'name' => 'Mutation',
                 'fields' => [
-                    'getAllCategories' => [
+                    'inserProducts' => [
                         'type' => Type::listOf(Type::string()),
                         'resolve' => function ($root, $args, $context) use ($conf) {
-                            $categories = new Category($conf['host'], $conf['database'], $conf['username'], $conf['pass']);
-                            return $categories->getAllCategories();
+                            /* $products = new Category($conf['host'], $conf['database'], $conf['username'], $conf['pass']);
+                            return $products->getAllCategories(); */
+
+                            return;
                         },
                     ],
-
                 ]
             ]);
 
@@ -53,7 +63,8 @@ class GraphQL
             $schema = new Schema(
                 (new SchemaConfig())
                     ->setQuery($queryType)
-                    ->setMutation($mutationType)
+                /*  ->setMutation($mutationType) */
+
             );
 
             $rawInput = file_get_contents('php://input');

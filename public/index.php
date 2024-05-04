@@ -12,13 +12,22 @@ require_once '../vendor/autoload.php';
 $conf = require_once '../config/index.php';
 
 $categories = new Category($conf['host'], $conf['database'], $conf['username'], $conf['pass']);
-$categories->createTable();
+$categories->createTable(); //create table for categories
+$products = new Product($conf['host'], $conf['database'], $conf['username'], $conf['pass']);
+$products->createTable(); //create table for products
 $json_data = file_get_contents('data.json');
 $data = json_decode($json_data, true);
 
+
+//populate with data categoriesa  && products table
 foreach ($data['data']['categories'] as $categoryData) {
     $categories->insertCategory($categoryData['name']);
 }
+
+foreach ($data['data']['products'] as $productsData) {
+    $products->insertProduct($productsData);
+}
+
 
 $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) {
     $r->post('/graphql', [App\Controller\GraphQL::class, 'handle']);
