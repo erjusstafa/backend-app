@@ -4,6 +4,12 @@
 use App\Controller\Database;
 use App\Controller\GraphQL;
 
+
+
+header("Access-Control-Allow-Origin: *"); // Allow requests from any origin
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS"); // Allow the specified HTTP methods
+header("Access-Control-Allow-Headers: Content-Type, Authorization"); // Allow the specified headers
+
 require_once  '../app/services/database.php';
 require_once  '../app/models/category.php';
 require_once  '../app/models/product.php';
@@ -38,21 +44,22 @@ $routeInfo = $dispatcher->dispatch(
     $_SERVER['REQUEST_URI']
 );
 
+
 switch ($routeInfo[0]) {
     case FastRoute\Dispatcher::NOT_FOUND:
-        $result = GraphQL::handle($conf);
-        echo $result;
+        echo "NOT_FOUND";
         break;
     case FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
         $allowedMethods = $routeInfo[1];
-        echo "graphql connected";
+        $result = GraphQL::handle();
+        echo $result;
         break;
     case FastRoute\Dispatcher::FOUND:
         $handler = $routeInfo[1];
         $vars = $routeInfo[2];
         echo $handler($vars);
-        $result = GraphQL::handle($conf);
-        echo $result;
+        
 
         break;
 }
+

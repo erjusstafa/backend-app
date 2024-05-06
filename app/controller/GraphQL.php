@@ -20,7 +20,7 @@ use RuntimeException;
 class GraphQL
 {
 
-    static public function handle($conf)
+    static public function handle()
     {
         try {
 
@@ -29,41 +29,26 @@ class GraphQL
                 'fields' => [
                     'categories' => [
                         'type' => Type::listOf(Types::CategoriesType()),
-                        'resolve' => function ($root, $args, $context) use ($conf) {
-                            $categories = new Category($conf['host'], $conf['database'], $conf['username'], $conf['pass']);
+                        'resolve' => function ($root, $args, $context)  {
+                            $categories = new Category('localhost', 'test5', 'root', '');
                             return $categories->getAllCategories();
                         },
                     ],
 
                     'products' => [
                         'type' => Type::listOf(Types::ProductsType()),
-                        'resolve' => function ($root, $args, $context) use ($conf) {
-                            $products = new Product($conf['host'], $conf['database'], $conf['username'], $conf['pass']);
+                        'resolve' => function ($root, $args, $context)   {
+                            $products = new Product('localhost', 'test5', 'root', '');
                             return $products->getAllProducts();
                         },
                     ],
                 ],
             ]);
-            /*  $mutationType = new ObjectType([
-                'name' => 'Mutation',
-                'fields' => [
-                    'inserProducts' => [
-                        'type' => Type::listOf(Type::string()),
-                        'resolve' => function ($root, $args, $context) use ($conf) {
-                            $products = new Category($conf['host'], $conf['database'], $conf['username'], $conf['pass']);
-                            return $products->getAllCategories();  
-
-                            return;
-                        },
-                    ],
-                ]
-            ]); */
-
 
             $mutationType = new ObjectType([
                 'name' => 'Mutation',
                 'fields' => [
-                    'updateProduct' => [
+                  /*   'updateProduct' => [
                         'type' => Type::boolean(), // Return true if the mutation is successful--is necesary
                         'args' => [
                             'id' => Type::string(),
@@ -78,7 +63,7 @@ class GraphQL
                     ],
 
                     'insertNewProduct' => [
-                        'type' => Type::boolean(), // Return true if the mutation is successful
+                        'type' => Type::boolean(),
                         'args' => [
                             'productInput' => InputTypes::ProductsInputType(),
                         ],
@@ -89,7 +74,7 @@ class GraphQL
                             return $addProduct->insertNewProduct($product);
                         }
 
-                    ],
+                    ], */
                 ]
             ]);
 
