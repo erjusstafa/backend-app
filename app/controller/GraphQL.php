@@ -48,16 +48,16 @@ class GraphQL
             $mutationType = new ObjectType([
                 'name' => 'Mutation',
                 'fields' => [
-                  /*   'updateProduct' => [
+                      'updateProduct' => [
                         'type' => Type::boolean(), // Return true if the mutation is successful--is necesary
                         'args' => [
                             'id' => Type::string(),
                             'name' =>  Type::string(),
                         ],
-                        'resolve' => function ($root, $args) use ($conf) {
+                        'resolve' => function ($root, $args)   {
                             $id = $args['id'];
                             $name = $args['name'];
-                            $updProduct = new Product($conf['host'], $conf['database'], $conf['username'], $conf['pass']);
+                            $updProduct = new Product('localhost', 'test5', 'root', '');
                             return $updProduct->updateProduct($id, $name);
                         },
                     ],
@@ -67,14 +67,14 @@ class GraphQL
                         'args' => [
                             'productInput' => InputTypes::ProductsInputType(),
                         ],
-                        'resolve' => function ($root, $args) use ($conf) {
+                        'resolve' => function ($root, $args) {
                             $product = $args['productInput'];
 
-                            $addProduct = new Product($conf['host'], $conf['database'], $conf['username'], $conf['pass']);
+                            $addProduct = new Product('localhost', 'test5', 'root', '');
                             return $addProduct->insertNewProduct($product);
                         }
 
-                    ], */
+                    ], 
                 ]
             ]);
 
