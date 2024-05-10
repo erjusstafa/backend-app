@@ -29,17 +29,33 @@ class GraphQL
                 'fields' => [
                     'categories' => [
                         'type' => Type::listOf(Types::CategoriesType()),
-                        'resolve' => function ($root, $args, $context)  {
+                        'resolve' => function ($root, $args, $context) {
                             $categories = new Category('localhost', 'test5', 'root', '');
                             return $categories->getAllCategories();
                         },
                     ],
+             
 
                     'products' => [
-                        'type' => Type::listOf(Types::ProductsType()),
-                        'resolve' => function ($root, $args, $context)   {
-                            $products = new Product('localhost', 'test5', 'root', '');
-                            return $products->getAllProducts();
+                        'type' => Type::listOf(Types::ProductsType()), // Return list of products
+                        'args' => [
+                            'id' => Type::string(),
+                            'category' => Type::string(), 
+
+                        ],
+                        'resolve' => function ($root, $args) {
+                            $id = $args['id'];
+                            $category = $args['category'];
+
+                            $product = new Product('localhost', 'test5', 'root', '');
+                            if ($id) {
+                                return $product->productById($id);
+                            } else if($category) {
+                                // Fetch products by category
+                                return $product->productByCategory($category);
+                            }else{
+                                return "Failed";
+                            }
                         },
                     ],
                 ],
@@ -48,13 +64,13 @@ class GraphQL
             $mutationType = new ObjectType([
                 'name' => 'Mutation',
                 'fields' => [
-                      'updateProduct' => [
+                    'updateProduct' => [
                         'type' => Type::boolean(), // Return true if the mutation is successful--is necesary
                         'args' => [
                             'id' => Type::string(),
                             'name' =>  Type::string(),
                         ],
-                        'resolve' => function ($root, $args)   {
+                        'resolve' => function ($root, $args) {
                             $id = $args['id'];
                             $name = $args['name'];
                             $updProduct = new Product('localhost', 'test5', 'root', '');
@@ -74,7 +90,20 @@ class GraphQL
                             return $addProduct->insertNewProduct($product);
                         }
 
-                    ], 
+                    ],
+
+                    /*  'productsById' => [
+                        'type' => Type::listOf(Types::ProductsType()), // Return list of products
+                        'args' => [
+                            'id' => Type::string(), // Input argument: category name
+                        ],
+                        'resolve' => function ($root, $args) {
+                            $id = $args['id'];
+
+                            $productById = new Product('localhost', 'test5', 'root', '');
+                            return $productById->productById($id);
+                        },
+                    ], */
                 ]
             ]);
 

@@ -69,8 +69,7 @@ class Product extends Database
         $attributes = new Atribute('localhost', 'test5', 'root', '');
         return $attributes->encodeAttributes($attributesData);
     }
-
-
+    /* 
     public function getAllProducts()
     {
         $query = "SELECT * FROM products";
@@ -90,8 +89,64 @@ class Product extends Database
 
             ];
         }, $products);
+    } */
+
+    public function productByCategory($category)
+    {
+        if ($category === 'all') {
+            // Return all products without filtering by category
+            $query = "SELECT * FROM products";
+            $stmt = $this->conn->prepare($query);
+        } else {
+            // Filter products by the specified category
+            $query = "SELECT * FROM products WHERE category = :category";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':category', $category);
+        }
+        $stmt->execute();
+        $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return array_map(function ($item) {
+            return [
+                'id' => $item['id'] ?? '',
+                'name' => $item['name'] ?? '',
+                'inStock' => $item['inStock'] ?? false,
+                'gallery' => json_decode($item['gallery'], true) ?? [],
+                'description' => $item['description'] ?? '',
+                'category' => $item['category'] ?? '',
+                'attributes' => json_decode($item['attributes'], true) ?? [],
+                'prices' => json_decode($item['prices'], true) ?? [],
+                'brand' => $item['brand'] ?? ''
+            ];
+        }, $products);
     }
 
+
+
+    public function productById($id)
+    {
+
+        // Filter products by the specified id
+        $query = "SELECT * FROM products WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return array_map(function ($item) {
+            return [
+                'id' => $item['id'] ?? '',
+                'name' => $item['name'] ?? '',
+                'inStock' => $item['inStock'] ?? false,
+                'gallery' => json_decode($item['gallery'], true) ?? [],
+                'description' => $item['description'] ?? '',
+                'category' => $item['category'] ?? '',
+                'attributes' => json_decode($item['attributes'], true) ?? [],
+                'prices' => json_decode($item['prices'], true) ?? [],
+                'brand' => $item['brand'] ?? ''
+            ];
+        }, $products);
+    }
 
     public function updateProduct($id, $name)
     {
