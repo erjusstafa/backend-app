@@ -6,6 +6,7 @@ require_once 'types.php';
 require_once 'inputType.php';
 
 use App\Controller\Types;
+
 use Category;
 use GraphQL\GraphQL as GraphQLBase;
 use GraphQL\Type\Definition\ObjectType;
@@ -34,13 +35,13 @@ class GraphQL
                             return $categories->getAllCategories();
                         },
                     ],
-             
 
                     'products' => [
-                        'type' => Type::listOf(Types::ProductsType()), // Return list of products
+                        'type' =>   Type::listOf(Types::ProductsType()), // Return single of products
+
                         'args' => [
                             'id' => Type::string(),
-                            'category' => Type::string(), 
+                            'category' => Type::string(),
 
                         ],
                         'resolve' => function ($root, $args) {
@@ -50,10 +51,10 @@ class GraphQL
                             $product = new Product('localhost', 'test5', 'root', '');
                             if ($id) {
                                 return $product->productById($id);
-                            } else if($category) {
+                            } else if ($category) {
                                 // Fetch products by category
                                 return $product->productByCategory($category);
-                            }else{
+                            } else {
                                 return "Failed";
                             }
                         },
@@ -64,22 +65,8 @@ class GraphQL
             $mutationType = new ObjectType([
                 'name' => 'Mutation',
                 'fields' => [
-                    'updateProduct' => [
-                        'type' => Type::boolean(), // Return true if the mutation is successful--is necesary
-                        'args' => [
-                            'id' => Type::string(),
-                            'name' =>  Type::string(),
-                        ],
-                        'resolve' => function ($root, $args) {
-                            $id = $args['id'];
-                            $name = $args['name'];
-                            $updProduct = new Product('localhost', 'test5', 'root', '');
-                            return $updProduct->updateProduct($id, $name);
-                        },
-                    ],
-
                     'insertNewProduct' => [
-                        'type' => Type::boolean(),
+                        'type' =>   Type::listOf(Types::ProductsType()), // Return single of products
                         'args' => [
                             'productInput' => InputTypes::ProductsInputType(),
                         ],
@@ -87,23 +74,11 @@ class GraphQL
                             $product = $args['productInput'];
 
                             $addProduct = new Product('localhost', 'test5', 'root', '');
-                            return $addProduct->insertNewProduct($product);
+                            $insertedProduct = $addProduct->insertNewProduct($product);
+
+                            return $insertedProduct;
                         }
-
                     ],
-
-                    /*  'productsById' => [
-                        'type' => Type::listOf(Types::ProductsType()), // Return list of products
-                        'args' => [
-                            'id' => Type::string(), // Input argument: category name
-                        ],
-                        'resolve' => function ($root, $args) {
-                            $id = $args['id'];
-
-                            $productById = new Product('localhost', 'test5', 'root', '');
-                            return $productById->productById($id);
-                        },
-                    ], */
                 ]
             ]);
 

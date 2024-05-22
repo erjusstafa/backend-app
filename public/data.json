@@ -75,6 +75,7 @@
            }
          ],
          "brand": "Nike x Stussy",
+         "quantity" :1,
          "__typename": "Product"
        },
        {
@@ -138,6 +139,7 @@
            }
          ],
          "brand": "Canada Goose",
+         "quantity" :1,
          "__typename": "Product"
        },
        {
@@ -225,6 +227,7 @@
            }
          ],
          "brand": "Sony",
+         "quantity" :1,
          "__typename": "Product"
        },
        {
@@ -312,6 +315,7 @@
            }
          ],
          "brand": "Microsoft",
+         "quantity" :1,
          "__typename": "Product"
        },
        {
@@ -397,6 +401,7 @@
            }
          ],
          "brand": "Apple",
+         "quantity" :1,
          "__typename": "Product"
        },
        {
@@ -480,6 +485,7 @@
            }
          ],
          "brand": "Apple",
+         "quantity" :1,
          "__typename": "Product"
        },
        {
@@ -504,6 +510,7 @@
            }
          ],
          "brand": "Apple",
+         "quantity" :1,
          "__typename": "Product"
        },
        {
@@ -528,6 +535,7 @@
            }
          ],
          "brand": "Apple",
+         "quantity" :1,
          "__typename": "Product"
        }
      ]
