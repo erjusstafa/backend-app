@@ -136,6 +136,13 @@ class Product extends Database
 
     public function insertNewProduct($product)
     {
+
+        if (isset($product['brand'])) {
+            $brand = $product['brand'];
+        } else {
+            // Handle the case where "brand" key is undefined
+            $brand = ""; // Or provide a default value
+        }
         $id = $product['id'];
         $name = $product['name'];
         $inStock = $product['inStock'];
@@ -144,7 +151,6 @@ class Product extends Database
         $category = $product['category'];
         $attributes = json_encode($product['attributes']);
         $prices = json_encode($product['prices']);
-        $brand = $product['brand'];
         $quantity = $product['quantity'];
 
         // Check if a product with the same attributes already exists
@@ -181,7 +187,7 @@ class Product extends Database
 
     private function getProductByAttributes($product)
     {
-         $id = $product['id']; // Assuming 'id' is the product identifier
+        $id = $product['id']; // Assuming 'id' is the product identifier
 
 
         // Construct a query to retrieve a product with matching attributes
