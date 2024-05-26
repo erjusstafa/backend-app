@@ -5,7 +5,7 @@ use App\Controller\Database;
 
 class Category extends Database
 {
-
+  //create table for Category with necessary fields
   public function createTable()
   {
     $query = "CREATE TABLE IF NOT EXISTS categories (
@@ -14,7 +14,7 @@ class Category extends Database
     $this->executeData($query);
   }
 
-
+  //check if category exist
   public function categoryExists($name)
   {
     $query = "SELECT COUNT(*) FROM categories WHERE name = :name";
@@ -23,6 +23,7 @@ class Category extends Database
     return $count > 0;
   }
 
+  //fill category table with data
   public function insertCategory($name)
   {
     if ($this->categoryExists($name)) {
@@ -32,6 +33,7 @@ class Category extends Database
       $this->executeData($query, [':name' => $name]);
     }
   }
+
   public function getAllCategories()
   {
     $query = "SELECT name FROM categories";

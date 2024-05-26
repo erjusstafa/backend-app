@@ -15,11 +15,11 @@ require_once  '../app/models/category.php';
 require_once  '../app/models/product.php';
 require_once  '../app/models/attribute.php';
 require_once '../vendor/autoload.php';
-$conf = require_once '../config/index.php';
+require_once '../config/index.php';
 
-$categories = new Category($conf['host'], $conf['database'], $conf['username'], $conf['pass']);
+$categories = new Category(DB_HOST, DB_NAME, DB_USER, DB_PASS);
 $categories->createTable(); //create table for categories
-$products = new Product($conf['host'], $conf['database'], $conf['username'], $conf['pass']);
+$products = new Product(DB_HOST, DB_NAME, DB_USER, DB_PASS);
 $products->createTable(); //create table for products
 $json_data = file_get_contents('data.json');
 $data = json_decode($json_data, true);
@@ -47,18 +47,20 @@ $routeInfo = $dispatcher->dispatch(
 
 switch ($routeInfo[0]) {
     case FastRoute\Dispatcher::NOT_FOUND:
-        echo "NOT_FOUND";
+        http_response_code(404);
+        echo '404 Not Found';
         break;
     case FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
         $allowedMethods = $routeInfo[1];
         $result = GraphQL::handle();
         echo $result;
         break;
+
+     
     case FastRoute\Dispatcher::FOUND:
         $handler = $routeInfo[1];
         $vars = $routeInfo[2];
         echo $handler($vars);
-        
 
         break;
 }

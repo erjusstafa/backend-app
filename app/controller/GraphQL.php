@@ -4,6 +4,7 @@ namespace App\Controller;
 
 require_once 'types.php';
 require_once 'inputType.php';
+require_once '../config/index.php';
 
 use App\Controller\Types;
 
@@ -31,32 +32,32 @@ class GraphQL
                     'categories' => [
                         'type' => Type::listOf(Types::CategoriesType()),
                         'resolve' => function ($root, $args, $context) {
-                            $categories = new Category('localhost', 'test5', 'root', '');
+                            $categories = new Category(DB_HOST, DB_NAME, DB_USER, DB_PASS);
                             return $categories->getAllCategories();
                         },
                     ],
 
-                    'products' => [
+                    'productsByCategory' => [
                         'type' =>   Type::listOf(Types::ProductsType()), // Return single of products
-
                         'args' => [
-                            'id' => Type::string(),
-                            'category' => Type::string(),
+                            'category' => Type::string()
+                        ],
+                        'resolve' => function ($root, $args) {
+                            $category = $args['category'];
+                            $product = new Product(DB_HOST, DB_NAME, DB_USER, DB_PASS);
 
+                            return $product->productByCategory($category);
+                        },
+                    ],
+                    'productsById' => [
+                        'type' =>   Type::listOf(Types::ProductsType()),
+                        'args' => [
+                            'id' => Type::string()
                         ],
                         'resolve' => function ($root, $args) {
                             $id = $args['id'];
-                            $category = $args['category'];
-
-                            $product = new Product('localhost', 'test5', 'root', '');
-                            if ($id) {
-                                return $product->productById($id);
-                            } else if ($category) {
-                                // Fetch products by category
-                                return $product->productByCategory($category);
-                            } else {
-                                return "Failed";
-                            }
+                            $product = new Product(DB_HOST, DB_NAME, DB_USER, DB_PASS);
+                            return $product->productById($id);
                         },
                     ],
                 ],
@@ -66,14 +67,14 @@ class GraphQL
                 'name' => 'Mutation',
                 'fields' => [
                     'insertNewProduct' => [
-                        'type' =>   Type::listOf(Types::ProductsType()), // Return single of products
+                        'type' =>   Type::listOf(Types::ProductsType()),
                         'args' => [
                             'productInput' => InputTypes::ProductsInputType(),
                         ],
                         'resolve' => function ($root, $args) {
                             $product = $args['productInput'];
 
-                            $addProduct = new Product('localhost', 'test5', 'root', '');
+                            $addProduct = new Product(DB_HOST, DB_NAME, DB_USER, DB_PASS);
                             $insertedProduct = $addProduct->insertNewProduct($product);
 
                             return $insertedProduct;
@@ -86,20 +87,19 @@ class GraphQL
                 (new SchemaConfig())
                     ->setQuery($queryType)
                     ->setMutation($mutationType)
-
             );
 
             $rawInput = file_get_contents('php://input');
             if ($rawInput === false) {
                 throw new RuntimeException('Failed to get php://input');
             }
-
             $input = json_decode($rawInput, true);
             $query = $input['query'];
             $variableValues = $input['variables'] ?? null;
 
             $rootValue = ['prefix' => 'You said: '];
-            $result = GraphQLBase::executeQuery($schema, $query, $rootValue, null, $variableValues);
+
+            $result = GraphQLBase::executeQuery($schema, $query,  $rootValue, null, $variableValues);
             $output = $result->toArray();
         } catch (Throwable $e) {
             $output = [

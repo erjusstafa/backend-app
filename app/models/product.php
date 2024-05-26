@@ -3,8 +3,19 @@
 use App\Controller\Atribute;
 use App\Controller\Database;
 
+require_once '../config/index.php';
+
 class Product extends Database
 {
+    private $attributeHandler;
+
+    public function __construct()
+    {
+        parent::__construct(DB_HOST, DB_NAME, DB_USER, DB_PASS);
+        $this->attributeHandler = new Atribute();
+    }
+
+    //create table for Product with necessary fields
     public function createTable()
     {
         $query = "CREATE TABLE IF NOT EXISTS products (
@@ -25,22 +36,17 @@ class Product extends Database
     }
 
 
+    //fill product table with data
     public function insertProduct($productsData)
     {
-
         // Check if product with the same id already exists
         if ($this->productExists($productsData['id'])) {
             return; // Skip insertion
         }
-
         // Convert gallery data to JSON format
         $galleryJson = json_encode($productsData['gallery'] ?? []);
-        $attributeJson = json_encode($productsData['attributes'] ?? []);
+        $attributeJson = $this->attributeHandler->encodeAttributes($productsData['attributes'] ?? []);
         $priceJson = json_encode($productsData['prices'] ?? []);
-
-
-        $this->encodeAttributes($attributeJson);
-
         // Insert product into products table
         $query = "INSERT INTO products (id, name, inStock, gallery, description, category, attributes,prices, brand,quantity) VALUES (?, ?, ?, ?, ?, ?,?, ?,?,?)";
 
@@ -59,6 +65,8 @@ class Product extends Database
         ]);
     }
 
+
+    //check if product exist
     private function productExists($productId)
     {
         $query = "SELECT COUNT(*) FROM products WHERE id = ?";
@@ -67,46 +75,29 @@ class Product extends Database
         return $count > 0;
     }
 
-
-    public  function encodeAttributes($attributesData)
-    {
-        $attributes = new Atribute('localhost', 'test5', 'root', '');
-        return $attributes->encodeAttributes($attributesData);
-    }
-
-
+    //get product by category
     public function productByCategory($category)
     {
         if ($category === 'all') {
             // Return all products without filtering by category
             $query = "SELECT * FROM products";
-            $stmt = $this->conn->prepare($query);
         } else {
             // Filter products by the specified category
             $query = "SELECT * FROM products WHERE category = :category";
-            $stmt = $this->conn->prepare($query);
+        }
+        $stmt = $this->conn->prepare($query);
+
+        if ($category !== 'all') {
             $stmt->bindParam(':category', $category);
         }
+
         $stmt->execute();
         $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        return array_map(function ($item) {
-            return [
-                'id' => $item['id'] ?? '',
-                'name' => $item['name'] ?? '',
-                'inStock' => $item['inStock'] ?? false,
-                'gallery' => json_decode($item['gallery'], true) ?? [],
-                'description' => $item['description'] ?? '',
-                'category' => $item['category'] ?? '',
-                'attributes' => json_decode($item['attributes'], true) ?? [],
-                'prices' => json_decode($item['prices'], true) ?? [],
-                'brand' => $item['brand'] ?? '',
-                'quantity' => $item['quantity'] ?? 0
-
-            ];
-        }, $products);
+        return $this->formatProducts($products);
     }
 
+    //get product by ID
     public function productById($id)
     {
         // Filter products by the specified id
@@ -116,24 +107,11 @@ class Product extends Database
         $stmt->execute();
         $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        return array_map(function ($item) {
-            return [
-                'id' => $item['id'] ?? '',
-                'name' => $item['name'] ?? '',
-                'inStock' => $item['inStock'] ?? false,
-                'gallery' => json_decode($item['gallery'], true) ?? [],
-                'description' => $item['description'] ?? '',
-                'category' => $item['category'] ?? '',
-                'attributes' => json_decode($item['attributes'], true) ?? [],
-                'prices' => json_decode($item['prices'], true) ?? [],
-                'brand' => $item['brand'] ?? '',
-                'quantity' => $item['quantity'] ?? 0
-
-            ];
-        }, $products);
+        return $this->formatProducts($products);
     }
 
 
+    //create order in db
     public function insertNewProduct($product)
     {
 
@@ -149,7 +127,7 @@ class Product extends Database
         $gallery = json_encode($product['gallery']);
         $description = $product['description'];
         $category = $product['category'];
-        $attributes = json_encode($product['attributes']);
+        $attributes = $this->attributeHandler->encodeAttributes($product['attributes'] ?? []);
         $prices = json_encode($product['prices']);
         $quantity = $product['quantity'];
 
@@ -189,7 +167,6 @@ class Product extends Database
     {
         $id = $product['id']; // Assuming 'id' is the product identifier
 
-
         // Construct a query to retrieve a product with matching attributes
         $query = "SELECT * FROM products WHERE id = :id ";
         $stmt = $this->executeData($query, [
@@ -203,6 +180,23 @@ class Product extends Database
         return $matchingProduct;
     }
 
+    private function formatProducts($products)
+    {
+        return array_map(function ($item) {
+            return [
+                'id' => $item['id'] ?? '',
+                'name' => $item['name'] ?? '',
+                'inStock' => $item['inStock'] ?? false,
+                'gallery' => json_decode($item['gallery'], true) ?? [],
+                'description' => $item['description'] ?? '',
+                'category' => $item['category'] ?? '',
+                'attributes' => json_decode($item['attributes'], true) ?? [],
+                'prices' => json_decode($item['prices'], true) ?? [],
+                'brand' => $item['brand'] ?? '',
+                'quantity' => $item['quantity'] ?? 0
+            ];
+        }, $products);
+    }
 
     public function executeData($query, $params = [])
     {
