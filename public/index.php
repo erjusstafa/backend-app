@@ -1,9 +1,7 @@
-
 <?php
 
 use App\Controller\Database;
 use App\Controller\GraphQL;
-
 
 
 header("Access-Control-Allow-Origin: *"); // Allow requests from any origin
@@ -37,6 +35,9 @@ foreach ($data['data']['products'] as $productsData) {
 
 $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) {
     $r->post('/graphql', [App\Controller\GraphQL::class, 'handle']);
+    $r->get('/', function () {
+        echo "Connected!";
+    });
 });
 
 $routeInfo = $dispatcher->dispatch(
@@ -47,21 +48,13 @@ $routeInfo = $dispatcher->dispatch(
 
 switch ($routeInfo[0]) {
     case FastRoute\Dispatcher::NOT_FOUND:
-        http_response_code(404);
-        echo '404 Not Found';
         break;
     case FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
         $allowedMethods = $routeInfo[1];
-        $result = GraphQL::handle();
-        echo $result;
         break;
-
-     
     case FastRoute\Dispatcher::FOUND:
         $handler = $routeInfo[1];
         $vars = $routeInfo[2];
         echo $handler($vars);
-
         break;
 }
-
